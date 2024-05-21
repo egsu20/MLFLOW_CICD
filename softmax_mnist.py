@@ -87,9 +87,9 @@ with torch.no_grad():  # torch.no_grad()를 호출하면 gradient 계산을 수�
     X_single_data = mnist_test.test_data[r:r + 1].view(-1, 28 * 28).float().to(device)
     Y_single_data = mnist_test.test_labels[r:r + 1].to(device)
 
-    print('Label: ', Y_single_data.item())  # 선택된 이미지의 실제 레이블을 출력합니다.
+    print('Label:', Y_single_data.item())  # 선택된 이미지의 실제 레이블을 출력합니다.
     single_prediction = linear(X_single_data)  # 모델을 사용하여 예측을 수행합니다.
-    print('Prediction: ', torch.argmax(single_prediction, 1).item())  # 예측된 클래스를 출력합니다.
+    print('Prediction:', torch.argmax(single_prediction, 1).item())  # 예측된 클래스를 출력합니다.
 
     # 선택된 이미지를 시각화하여 출력합니다.
     plt.imshow(mnist_test.test_data[r:r + 1].view(28, 28), cmap='Greys', interpolation='nearest')
