@@ -6,6 +6,8 @@ import torch.nn as nn # PyTorch의 신경망 모델을 구축하는 데 사용�
 import matplotlib.pyplot as plt # 데이터 시각화를 위한 Python 라이브러리
 import random # 난수 생성 및 관련된 기능을 제공하는 Python 표준 라이브러리
 
+print("update")
+
 USE_CUDA = torch.cuda.is_available() # GPU를 사용할 수 있으면 True, 아니면 False를 리턴
 device = torch.device("cuda" if USE_CUDA else "cpu") # GPU를 사용할 수 있으면 사용하고 아니면 CPU 사용
 print("다음 기기로 학습합니다:",device)
