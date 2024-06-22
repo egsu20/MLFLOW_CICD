@@ -2,7 +2,7 @@ name: CI/CD
 
 on:
   push:
-    branches: [ main ]  # main 브랜치에 푸시될 때마다 해당 워크플로우 실행
+    branches: [ aa ]  # main 브랜치에 푸시될 때마다 해당 워크플로우 실행
 
 jobs:
   build:
