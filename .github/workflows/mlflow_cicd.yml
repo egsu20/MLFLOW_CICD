@@ -24,7 +24,7 @@ jobs:
           libncurses5-dev libncursesw5-dev xz-utils tk-dev libffi-dev \
           liblzma-dev git
         python -m pip install --upgrade pip  # pip을 최신 버전으로 업그레이드
-        pip install -r requirements.txt  # requirements.txt 파일에 명시된 의존성 패키지 설치
+        pip install -r mnist_cicd/requirements.txt  # requirements.txt 파일에 명시된 의존성 패키지 설치
         pip install mlflow  # MLflow 설치
 
     - name: Run MLflow Project
@@ -44,5 +44,5 @@ jobs:
 
     - name: Build and push Docker image
       run: |
-        docker build -t ${{ secrets.DOCKER_USERNAME }}/mnist_cicd:latest .  # 현재 디렉토리에서 Docker 이미지를 빌드하고 'latest' 태그를 붙임
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/mnist_cicd:latest mnist_cicd  # 현재 디렉토리에서 Docker 이미지를 빌드하고 'latest' 태그를 붙임
         docker push ${{ secrets.DOCKER_USERNAME }}/mnist_cicd:latest  # 빌드된 이미지를 Docker Hub에 푸시
