@@ -28,10 +28,10 @@ jobs:
         pip install mlflow  # MLflow 설치
 
     - name: Run MLflow Project
-      run: mlflow run . -P script=scripts/train_model.py  # MLflow 프로젝트 실행
+      run: python scripts/train_model.py  # MLflow 프로젝트 실행
 
     - name: Evaluate model
-      run: mlflow run . -e evaluate -P model_name=SimpleNN -P model_version=1  # MLflow 프로젝트 평가 실행
+      run: python scripts/evaluate_model.py --model_name SimpleNN --model_version 1  # MLflow 프로젝트 평가 실행
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1  # Docker Buildx를 설정하여 멀티 플랫폼 빌드 가능
@@ -46,4 +46,3 @@ jobs:
       run: |
         docker build -t ${{ secrets.DOCKER_USERNAME }}/mnist_cicd:latest .  # 현재 디렉토리에서 Docker 이미지를 빌드하고 'latest' 태그를 붙임
         docker push ${{ secrets.DOCKER_USERNAME }}/mnist_cicd:latest  # 빌드된 이미지를 Docker Hub에 푸시
-
