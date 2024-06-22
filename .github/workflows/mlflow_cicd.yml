@@ -23,7 +23,7 @@ jobs:
         pip install mlflow  # MLflow 설치
 
     - name: Run MLflow Project
-      run: mlflow run . -P epochs=10 -P batch_size=64 -P learning_rate=0.01  # MLflow 프로젝트 실행
+      run: mlflow run . -P script=scripts/train_model.py  # MLflow 프로젝트 실행
 
     - name: Evaluate model
       run: mlflow run . -e evaluate -P model_name=SimpleNN -P model_version=1  # MLflow 프로젝트 평가 실행

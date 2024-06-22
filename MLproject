@@ -1,0 +1,14 @@
+name: MNIST Training
+
+entry_points:
+  main:
+    parameters:
+      script: {type: str, default: "scripts/train_model.py"}
+    command: >
+      python {script}
+  evaluate:
+    parameters:
+      model_name: {type: str, default: "SimpleNN"}
+      model_version: {type: int, default: 1}
+    command: >
+      python scripts/evaluate_model.py --model_name {model_name} --model_version {model_version}
