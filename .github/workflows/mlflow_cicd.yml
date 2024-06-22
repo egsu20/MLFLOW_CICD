@@ -11,34 +11,18 @@ jobs:
     steps:
     - uses: actions/checkout@v2  # 리포지토리의 코드를 체크아웃하는 액션
 
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y make build-essential libssl-dev zlib1g-dev \
-          libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
-          libncurses5-dev libncursesw5-dev xz-utils tk-dev libffi-dev \
-          liblzma-dev git
-        curl https://pyenv.run | bash
-        echo 'export PYENV_ROOT="$HOME/.pyenv"' >> $GITHUB_ENV
-        echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> $GITHUB_ENV
-        echo 'eval "$(pyenv init --path)"' >> $GITHUB_ENV
-        echo 'eval "$(pyenv init -)"' >> $GITHUB_ENV
-        echo 'eval "$(pyenv virtualenv-init -)"' >> $GITHUB_ENV
-        export PYENV_ROOT="$HOME/.pyenv"
-        export PATH="$PYENV_ROOT/bin:$PATH"
-        eval "$(pyenv init --path)"
-        eval "$(pyenv init -)"
-        eval "$(pyenv virtualenv-init -)"
-        pyenv install 3.8.18
-        pyenv global 3.8.18
-
     - name: Set up Python
       uses: actions/setup-python@v2  # Python 환경을 설정하는 액션
       with:
         python-version: '3.8'  # Python 3.8 버전을 사용
 
-    - name: Install Python packages
+    - name: Install dependencies
       run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libssl-dev zlib1g-dev \
+          libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
+          libncurses5-dev libncursesw5-dev xz-utils tk-dev libffi-dev \
+          liblzma-dev git
         python -m pip install --upgrade pip  # pip을 최신 버전으로 업그레이드
         pip install -r requirements.txt  # requirements.txt 파일에 명시된 의존성 패키지 설치
         pip install mlflow  # MLflow 설치
@@ -62,3 +46,4 @@ jobs:
       run: |
         docker build -t ${{ secrets.DOCKER_USERNAME }}/mnist_cicd:latest .  # 현재 디렉토리에서 Docker 이미지를 빌드하고 'latest' 태그를 붙임
         docker push ${{ secrets.DOCKER_USERNAME }}/mnist_cicd:latest  # 빌드된 이미지를 Docker Hub에 푸시
+
