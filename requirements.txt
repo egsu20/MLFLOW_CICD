@@ -1,3 +1,4 @@
+mlflow
 torch
 torchvision
-matplotlib
+flask
