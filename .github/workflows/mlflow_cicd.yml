@@ -70,11 +70,7 @@ jobs:
           sleep 5
         done
 
-    - name: Run MLflow server
-      run: |
-        docker exec -d mlflow_cicd_container mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root /mlflow/artifacts --host 0.0.0.0 --port 5000
-
     - name: Test Docker container
       run: |
-        docker exec mlflow_cicd_container python /app/scripts/train_model.py
-        docker exec mlflow_cicd_container python /app/scripts/evaluate_model.py --model_name SimpleNN --model_version 1
+        docker exec mlflow_cicd_container python /scripts/train_model.py
+        docker exec mlflow_cicd_container python /scripts/evaluate_model.py --model_name SimpleNN --model_version 1
