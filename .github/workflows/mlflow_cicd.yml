@@ -28,10 +28,10 @@ jobs:
         pip install mlflow  # MLflow 설치
 
     - name: Run MLflow Project
-      run: python $GITHUB_WORKSPACE/mlflow_cicd/scripts/train_model.py  # MLflow 프로젝트 실행
+      run: python $GITHUB_WORKSPACE/scripts/train_model.py  # MLflow 프로젝트 실행
 
     - name: Evaluate model
-      run: python $GITHUB_WORKSPACE/mlflow_cicd/scripts/evaluate_model.py --model_name SimpleNN --model_version 1  # MLflow 프로젝트 평가 실행
+      run: python $GITHUB_WORKSPACE/scripts/evaluate_model.py --model_name SimpleNN --model_version 1  # MLflow 프로젝트 평가 실행
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1  # Docker Buildx를 설정하여 멀티 플랫폼 빌드 가능
@@ -44,7 +44,7 @@ jobs:
 
     - name: Build and push Docker image
       run: |
-        docker build -t ${{ secrets.DOCKER_USERNAME }}/mlflow_cicd:latest $GITHUB_WORKSPACE/mlflow_cicd  # 현재 디렉토리에서 Docker 이미지를 빌드하고 'latest' 태그를 붙임
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/mlflow_cicd:latest $GITHUB_WORKSPACE  # 현재 디렉토리에서 Docker 이미지를 빌드하고 'latest' 태그를 붙임
         docker push ${{ secrets.DOCKER_USERNAME }}/mlflow_cicd:latest  # 빌드된 이미지를 Docker Hub에 푸시
 
     - name: Run Docker container
@@ -54,8 +54,8 @@ jobs:
 
     - name: Test Docker container
       run: |
-        docker exec mlflow_cicd_container python /mlflow_cicd/scripts/train_model.py
-        docker exec mlflow_cicd_container python /mlflow_cicd/scripts/evaluate_model.py --model_name SimpleNN --model_version 1
+        docker exec mlflow_cicd_container python /scripts/train_model.py
+        docker exec mlflow_cicd_container python /scripts/evaluate_model.py --model_name SimpleNN --model_version 1
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
