@@ -17,9 +17,8 @@ test_dataset = datasets.MNIST(root='MNIST_data', train=False, transform=transfor
 test_loader = DataLoader(dataset=test_dataset, batch_size=64, shuffle=False)
 
 # 모델 로드
-model_uri = f"models:/{args.model_name}/{args.model_version}"
-print(f"Loading model from {model_uri}")
-model = mlflow.pytorch.load_model(model_uri)
+mlflow.set_tracking_uri("http://127.0.0.1:5000")  # MLflow 서버 URI 설정
+model = mlflow.pytorch.load_model(f"models:/{args.model_name}/{args.model_version}")
 
 # 모델 평가
 model.eval()

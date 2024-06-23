@@ -2,6 +2,7 @@ from flask import Flask, request, render_template
 import os
 import subprocess
 import zipfile
+import mlflow
 
 app = Flask(__name__)
 
@@ -62,16 +63,14 @@ def upload_file():
         os.chdir(current_dir)
         return render_template('index.html', message=f"Upload Failed: {str(e)}"), 500
 
-    docker_container = "mlflow_cicd_container"
-
     try:
         if training_included == 'yes':
-            subprocess.run(['docker', 'exec', docker_container, 'python', '/app/scripts/train_model.py'], check=True)
+            subprocess.run(['python', 'scripts/train_model.py'], check=True)
         if evaluation_included == 'yes':
-            subprocess.run(['docker', 'exec', docker_container, 'python', '/app/scripts/evaluate_model.py'], check=True)
+            subprocess.run(['python', 'scripts/evaluate_model.py'], check=True)
     except subprocess.CalledProcessError as e:
         os.chdir(current_dir)
-        return render_template('index.html', message=f"Docker Execution Failed: {str(e)}"), 500
+        return render_template('index.html', message=f"Execution Failed: {str(e)}"), 500
 
     os.chdir(current_dir)
     return render_template('index.html', message="Upload Successful"), 200
