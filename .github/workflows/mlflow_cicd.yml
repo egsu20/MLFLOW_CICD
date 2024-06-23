@@ -20,11 +20,11 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y build-essential libssl-dev zlib1g-dev \
-          libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
-          libncurses5-dev libncursesw5-dev xz-utils tk-dev libffi-dev \
-          liblzma-dev git
+                                libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
+                                libncurses5-dev libncursesw5-dev xz-utils tk-dev libffi-dev \
+                                liblzma-dev git
         python -m pip install --upgrade pip  # pip을 최신 버전으로 업그레이드
-        pip install -r $GITHUB_WORKSPACE/mnist_cicd/requirements.txt  # requirements.txt 파일에 명시된 의존성 패키지 설치
+        pip install -r $GITHUB_WORKSPACE/requirements.txt  # requirements.txt 파일에 명시된 의존성 패키지 설치
         pip install mlflow  # MLflow 설치
 
     - name: Run MLflow Project
