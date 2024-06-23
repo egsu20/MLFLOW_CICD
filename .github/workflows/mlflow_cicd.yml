@@ -9,7 +9,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
     - name: Set up Python
       uses: actions/setup-python@v2
@@ -24,14 +25,8 @@ jobs:
                                 libncurses5-dev libncursesw5-dev xz-utils tk-dev libffi-dev \
                                 liblzma-dev git
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install -r $GITHUB_WORKSPACE/requirements.txt
         pip install mlflow
-
-    - name: Run MLflow Project
-      run: python scripts/train_model.py
-
-    - name: Evaluate model
-      run: python scripts/evaluate_model.py --model_name SimpleNN --model_version 1
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
@@ -44,21 +39,31 @@ jobs:
 
     - name: Build and push Docker image
       run: |
-        docker build -t ${{ secrets.DOCKER_USERNAME }}/mlflow_cicd:latest .  # 빌드 컨텍스트를 현재 디렉토리로 설정
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/mlflow_cicd:latest $GITHUB_WORKSPACE
         docker push ${{ secrets.DOCKER_USERNAME }}/mlflow_cicd:latest
 
+    - name: Check if container exists
+      id: check_container
+      run: |
+        if [ $(docker ps -a -f name=mlflow_cicd_container | grep -w mlflow_cicd_container | wc -l) -eq 1 ]; then
+          echo "exists=true" >> $GITHUB_ENV
+        else
+          echo "exists=false" >> $GITHUB_ENV
+        fi
+
     - name: Run Docker container
+      if: env.exists == 'false'
       run: |
         docker run -d -p 5000:5000 --name mlflow_cicd_container ${{ secrets.DOCKER_USERNAME }}/mlflow_cicd:latest
-        sleep 10
+        sleep 10  # 컨테이너가 시작될 시간을 줌
+
+    - name: Start existing Docker container
+      if: env.exists == 'true'
+      run: |
+        docker start mlflow_cicd_container
+        sleep 10  # 컨테이너가 시작될 시간을 줌
 
     - name: Test Docker container
       run: |
         docker exec mlflow_cicd_container python /scripts/train_model.py
         docker exec mlflow_cicd_container python /scripts/evaluate_model.py --model_name SimpleNN --model_version 1
-
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: mlruns
-        path: mlruns/
