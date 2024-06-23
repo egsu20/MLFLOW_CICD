@@ -2,19 +2,19 @@ name: MLflow CI/CD
 
 on:
   push:
-    branches: [ main ]  # main 브랜치에 푸시될 때마다 해당 워크플로우 실행
+    branches: [ main ]
 
 jobs:
   build:
-    runs-on: ubuntu-latest  # GitHub Actions가 제공하는 최신 Ubuntu 환경에서 실행
+    runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2  # 리포지토리의 코드를 체크아웃하는 액션
+    - uses: actions/checkout@v2
 
     - name: Set up Python
-      uses: actions/setup-python@v2  # Python 환경을 설정하는 액션
+      uses: actions/setup-python@v2
       with:
-        python-version: '3.8'  # Python 3.8 버전을 사용
+        python-version: '3.8'
 
     - name: Install dependencies
       run: |
@@ -23,39 +23,41 @@ jobs:
                                 libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
                                 libncurses5-dev libncursesw5-dev xz-utils tk-dev libffi-dev \
                                 liblzma-dev git
-        python -m pip install --upgrade pip  # pip을 최신 버전으로 업그레이드
-        pip install -r $GITHUB_WORKSPACE/requirements.txt  # requirements.txt 파일에 명시된 의존성 패키지 설치
-        pip install mlflow  # MLflow 설치
+        python -m pip install --upgrade pip
+        pip install -r $GITHUB_WORKSPACE/requirements.txt
+        pip install mlflow
 
     - name: Run MLflow Project
-      run: python $GITHUB_WORKSPACE/scripts/train_model.py  # MLflow 프로젝트 실행
+      run: python $GITHUB_WORKSPACE/scripts/train_model.py
 
     - name: Evaluate model
-      run: python $GITHUB_WORKSPACE/scripts/evaluate_model.py --model_name SimpleNN --model_version 1  # MLflow 프로젝트 평가 실행
+      run: python $GITHUB_WORKSPACE/scripts/evaluate_model.py --model_name SimpleNN --model_version 1
 
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1  # Docker Buildx를 설정하여 멀티 플랫폼 빌드 가능
+      uses: docker/setup-buildx-action@v1
 
     - name: Log in to Docker Hub
-      uses: docker/login-action@v1  # Docker Hub에 로그인하는 액션
+      uses: docker/login-action@v1
       with:
-        username: ${{ secrets.DOCKER_USERNAME }}  # GitHub Secrets에 저장된 Docker Hub 사용자명
-        password: ${{ secrets.DOCKER_PASSWORD }}  # GitHub Secrets에 저장된 Docker Hub 비밀번호
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
 
     - name: Build and push Docker image
       run: |
-        docker build -t ${{ secrets.DOCKER_USERNAME }}/mlflow_cicd:latest $GITHUB_WORKSPACE  # 현재 디렉토리에서 Docker 이미지를 빌드하고 'latest' 태그를 붙임
-        docker push ${{ secrets.DOCKER_USERNAME }}/mlflow_cicd:latest  # 빌드된 이미지를 Docker Hub에 푸시
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/mlflow_cicd:latest $GITHUB_WORKSPACE/mlflow_cicd
+        docker push ${{ secrets.DOCKER_USERNAME }}/mlflow_cicd:latest
 
     - name: Run Docker container
       run: |
+        docker ps -a --format "{{.Names}}" | grep -w "mlflow_cicd_container" && \
+        docker start mlflow_cicd_container || \
         docker run -d -p 5000:5000 --name mlflow_cicd_container ${{ secrets.DOCKER_USERNAME }}/mlflow_cicd:latest
-        sleep 10  # 컨테이너가 시작될 시간을 줌
+        sleep 10
 
     - name: Test Docker container
       run: |
-        docker exec mlflow_cicd_container python /scripts/train_model.py
-        docker exec mlflow_cicd_container python /scripts/evaluate_model.py --model_name SimpleNN --model_version 1
+        docker exec mlflow_cicd_container python /mlflow_cicd/scripts/train_model.py
+        docker exec mlflow_cicd_container python /mlflow_cicd/scripts/evaluate_model.py --model_name SimpleNN --model_version 1
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2

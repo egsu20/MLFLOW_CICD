@@ -60,7 +60,7 @@ with mlflow.start_run() as run:
             running_loss += loss.item()
         avg_loss = running_loss / len(train_loader)
         print(f'Epoch [{epoch+1}/{epochs}], Loss: {avg_loss:.4f}')
-        mlflow.log_metric("loss", avg_loss, step=epoch)  # 에포크별 평균 손실 로그
+        mlflow.log_metric("loss", avg_loss, step=epoch)
 
     # 모델 저장
     mlflow.pytorch.log_model(model, "model")
