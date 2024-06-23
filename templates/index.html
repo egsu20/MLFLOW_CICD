@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MLflow Model Upload</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script>
+        function toggleDataUpload() {
+            var dataIncludedYes = document.getElementById('data_included_yes').checked;
+            var dataUploadDiv = document.getElementById('data_upload_div');
+            if (!dataIncludedYes) {
+                dataUploadDiv.style.display = 'block';
+            } else {
+                dataUploadDiv.style.display = 'none';
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e6ffe6; /* 연두빛 파스텔톤 배경 색상 */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center; /* 중앙 정렬 */
+            width: 100%;
+            max-width: 500px;
+        }
+
+        h1 {
+            color: #343a40;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-check {
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .message {
+            color: #28a745;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .error {
+            color: #dc3545;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container background">
+        <h1>Upload your model and data</h1>
+        {% if message %}
+            <p class="message">{{ message }}</p>
+        {% endif %}
+        <form method="post" action="/upload" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="username">Your Username:</label>
+                <input type="text" name="username" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="data_included">1. Is dataset included in the code?</label><br>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="data_included" id="data_included_yes" value="yes" onclick="toggleDataUpload()" required>
+                    <label class="form-check-label" for="data_included_yes">Yes</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="data_included" id="data_included_no" value="no" onclick="toggleDataUpload()" required>
+                    <label class="form-check-label" for="data_included_no">No</label>
+                </div>
+            </div>
+
+            <div id="data_upload_div" style="display: none;">
+                <div class="form-group">
+                    <label for="data">Data File (zip):</label>
+                    <input type="file" name="data" class="form-control-file">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="training_included">2. Is training included in the code?</label><br>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="training_included" id="training_included_yes" value="yes" required>
+                    <label class="form-check-label" for="training_included_yes">Yes</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="training_included" id="training_included_no" value="no" required>
+                    <label class="form-check-label" for="training_included_no">No</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="evaluation_included">3. Is evaluation included in the code?</label><br>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="evaluation_included" id="evaluation_included_yes" value="yes" required>
+                    <label class="form-check-label" for="evaluation_included_yes">Yes</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="evaluation_included" id="evaluation_included_no" value="no" required>
+                    <label class="form-check-label" for="evaluation_included_no">No</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="model">Model File:</label>
+                <input type="file" name="model" class="form-control-file" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Upload</button>
+        </form>
+    </div>
+</body>
+</html>
