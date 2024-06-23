@@ -13,3 +13,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 현재 디렉터리의 모든 파일을 컨테이너의 작업 디렉터리로 복사합니다.
 COPY . .
 
+# 컨테이너가 계속 실행되도록 합니다.
+CMD ["tail", "-f", "/dev/null"]
