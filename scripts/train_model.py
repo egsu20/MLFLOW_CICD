@@ -42,6 +42,14 @@ criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(model.parameters(), lr=learning_rate)
 
 # MLflow 시작
+mlflow.set_tracking_uri("http://127.0.0.1:5000")  # MLflow 서버 URI 설정
+
+# 실험 ID 설정 또는 새로운 실험 생성
+experiment_name = "MNIST Experiment"
+if not mlflow.get_experiment_by_name(experiment_name):
+    mlflow.create_experiment(experiment_name)
+mlflow.set_experiment(experiment_name)
+
 with mlflow.start_run() as run:
     mlflow.log_param("epochs", epochs)
     mlflow.log_param("batch_size", batch_size)
