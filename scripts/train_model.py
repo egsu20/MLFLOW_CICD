@@ -7,6 +7,7 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 from mlflow.tracking import MlflowClient
+import numpy as np  # numpy import 추가
 from sklearn.metrics import precision_score, recall_score
 
 mlflow.set_tracking_uri("http://127.0.0.1:5000")  # MLflow 서버 URI 설정
@@ -27,6 +28,8 @@ learning_rate = args.learning_rate
 transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
 train_dataset = datasets.MNIST(root='MNIST_data', train=True, transform=transform, download=True)
 train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
+test_dataset = datasets.MNIST(root='MNIST_data', train=False, transform=transform, download=True)
+test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False)
 
 # 모델 정의
 class SimpleNN(nn.Module):
@@ -75,16 +78,14 @@ with mlflow.start_run() as run:
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
-            _, predicted = torch.max(outputs.data, 1)
-            all_preds.extend(predicted.numpy())
+            preds = torch.argmax(outputs, dim=1)
+            all_preds.extend(preds.numpy())
             all_labels.extend(labels.numpy())
         avg_loss = running_loss / len(train_loader)
         epoch_accuracy = (np.array(all_preds) == np.array(all_labels)).sum() / len(all_labels)
-        epoch_precision = precision_score(all_labels, all_preds, average='weighted')
-        epoch_recall = recall_score(all_labels, all_preds, average='weighted')
-        
+        epoch_precision = precision_score(all_labels, all_preds, average='macro')
+        epoch_recall = recall_score(all_labels, all_preds, average='macro')
         print(f'Epoch [{epoch+1}/{epochs}], Loss: {avg_loss:.4f}, Accuracy: {epoch_accuracy:.4f}, Precision: {epoch_precision:.4f}, Recall: {epoch_recall:.4f}')
-        
         mlflow.log_metric("loss", avg_loss, step=epoch)
         mlflow.log_metric("accuracy", epoch_accuracy, step=epoch)
         mlflow.log_metric("precision", epoch_precision, step=epoch)
@@ -94,4 +95,3 @@ with mlflow.start_run() as run:
     mlflow.pytorch.log_model(model, "model")
     model_uri = f"runs:/{run.info.run_id}/model"
     mlflow.register_model(model_uri, "SimpleNN")
-
