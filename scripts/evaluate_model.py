@@ -5,6 +5,9 @@ import torch
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 
+mlflow.set_tracking_uri("http://127.0.0.1:5000")
+print("MLflow version:", mlflow.__version__)
+
 # 명령줄 인자 파서 설정
 parser = argparse.ArgumentParser(description='Evaluate PyTorch MNIST Model')
 parser.add_argument('--model_name', type=str, default="SimpleNN", help='Name of the registered model')
@@ -17,7 +20,6 @@ test_dataset = datasets.MNIST(root='MNIST_data', train=False, transform=transfor
 test_loader = DataLoader(dataset=test_dataset, batch_size=64, shuffle=False)
 
 # 모델 로드
-mlflow.set_tracking_uri("http://127.0.0.1:5000")  # MLflow 서버 URI 설정
 model = mlflow.pytorch.load_model(f"models:/{args.model_name}/{args.model_version}")
 
 # 모델 평가

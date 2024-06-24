@@ -7,6 +7,9 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 
+mlflow.set_tracking_uri("http://127.0.0.1:5000")
+print("MLflow version:", mlflow.__version__)
+
 # 명령줄 인자 파서 설정
 parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
 parser.add_argument('--epochs', type=int, default=5, help='number of epochs to train (default: 5)')
@@ -42,7 +45,6 @@ criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(model.parameters(), lr=learning_rate)
 
 # MLflow 시작
-mlflow.set_tracking_uri("http://127.0.0.1:5000")  # MLflow 서버 URI 설정
 experiment_name = "MNIST Experiment"
 if not mlflow.get_experiment_by_name(experiment_name):
     mlflow.create_experiment(experiment_name)
@@ -72,5 +74,3 @@ with mlflow.start_run() as run:
     mlflow.pytorch.log_model(model, "model")
     model_uri = f"runs:/{run.info.run_id}/model"
     mlflow.register_model(model_uri, "SimpleNN")
-
-    print("Model training completed and logged with MLflow")

@@ -2,7 +2,6 @@ from flask import Flask, request, render_template
 import os
 import subprocess
 import zipfile
-import mlflow
 
 app = Flask(__name__)
 
@@ -65,9 +64,14 @@ def upload_file():
 
     try:
         if training_included == 'yes':
-            subprocess.run(['python', 'scripts/train_model.py'], check=True)
+            epochs = request.form.get('epochs', '5')
+            batch_size = request.form.get('batch_size', '64')
+            learning_rate = request.form.get('learning_rate', '0.01')
+            subprocess.run(['python3', 'scripts/train_model.py', '--epochs', epochs, '--batch_size', batch_size, '--learning_rate', learning_rate], check=True)
         if evaluation_included == 'yes':
-            subprocess.run(['python', 'scripts/evaluate_model.py'], check=True)
+            model_name = request.form.get('model_name', 'SimpleNN')
+            model_version = request.form.get('model_version', '1')
+            subprocess.run(['python3', 'scripts/evaluate_model.py', '--model_name', model_name, '--model_version', model_version], check=True)
     except subprocess.CalledProcessError as e:
         os.chdir(current_dir)
         return render_template('index.html', message=f"Execution Failed: {str(e)}"), 500

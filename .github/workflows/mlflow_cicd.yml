@@ -4,12 +4,16 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-    - name: Checkout repository
+    - name: Checkout code
       uses: actions/checkout@v2
 
     - name: Set up Python
@@ -21,18 +25,11 @@ jobs:
       run: |
         python -m venv mlflow-env
         source mlflow-env/bin/activate
+        pip install --upgrade pip
         pip install -r requirements.txt
+        pip install pytest
 
-    - name: Run unit tests
+    - name: Run tests
       run: |
         source mlflow-env/bin/activate
         pytest tests/
-
-    - name: Build Docker image
-      run: docker build . -t mlflow_cicd
-
-    - name: Push Docker image to Docker Hub
-      run: |
-        docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-        docker tag mlflow_cicd ${{ secrets.DOCKER_USERNAME }}/mlflow_cicd:latest
-        docker push ${{ secrets.DOCKER_USERNAME }}/mlflow_cicd:latest
