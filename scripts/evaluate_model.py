@@ -4,9 +4,9 @@ import argparse
 import torch
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
+from sklearn.metrics import accuracy_score, precision_score, recall_score
 
-mlflow.set_tracking_uri("http://127.0.0.1:5000")
-print("MLflow version:", mlflow.__version__)
+mlflow.set_tracking_uri("http://127.0.0.1:5000")  # MLflow 서버 URI 설정
 
 # 명령줄 인자 파서 설정
 parser = argparse.ArgumentParser(description='Evaluate PyTorch MNIST Model')
@@ -24,18 +24,23 @@ model = mlflow.pytorch.load_model(f"models:/{args.model_name}/{args.model_versio
 
 # 모델 평가
 model.eval()
-correct = 0
-total = 0
+all_preds = []
+all_labels = []
 with torch.no_grad():
     for images, labels in test_loader:
         outputs = model(images)
         _, predicted = torch.max(outputs.data, 1)
-        total += labels.size(0)
-        correct += (predicted == labels).sum().item()
+        all_preds.extend(predicted.numpy())
+        all_labels.extend(labels.numpy())
 
-accuracy = correct / total
-print(f'Accuracy: {accuracy * 100:.2f}%')
+accuracy = accuracy_score(all_labels, all_preds)
+precision = precision_score(all_labels, all_preds, average='weighted')
+recall = recall_score(all_labels, all_preds, average='weighted')
+
+print(f'Accuracy: {accuracy:.4f}, Precision: {precision:.4f}, Recall: {recall:.4f}')
 
 # MLflow에 결과 기록
 with mlflow.start_run() as run:
     mlflow.log_metric("accuracy", accuracy)
+    mlflow.log_metric("precision", precision)
+    mlflow.log_metric("recall", recall)

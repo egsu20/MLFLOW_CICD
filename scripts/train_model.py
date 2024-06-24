@@ -6,9 +6,10 @@ import torch.nn as nn
 import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
+from mlflow.tracking import MlflowClient
+from sklearn.metrics import precision_score, recall_score
 
-mlflow.set_tracking_uri("http://127.0.0.1:5000")
-print("MLflow version:", mlflow.__version__)
+mlflow.set_tracking_uri("http://127.0.0.1:5000")  # MLflow 서버 URI 설정
 
 # 명령줄 인자 파서 설정
 parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
@@ -46,8 +47,14 @@ optimizer = optim.SGD(model.parameters(), lr=learning_rate)
 
 # MLflow 시작
 experiment_name = "MNIST Experiment"
-if not mlflow.get_experiment_by_name(experiment_name):
-    mlflow.create_experiment(experiment_name)
+client = MlflowClient()
+experiment = client.get_experiment_by_name(experiment_name)
+if experiment is None:
+    client.create_experiment(experiment_name)
+else:
+    if experiment.lifecycle_stage == "deleted":
+        client.restore_experiment(experiment.experiment_id)
+
 mlflow.set_experiment(experiment_name)
 
 with mlflow.start_run() as run:
@@ -59,6 +66,8 @@ with mlflow.start_run() as run:
     for epoch in range(epochs):
         model.train()
         running_loss = 0.0
+        all_preds = []
+        all_labels = []
         for images, labels in train_loader:
             optimizer.zero_grad()
             outputs = model(images)
@@ -66,11 +75,23 @@ with mlflow.start_run() as run:
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
+            _, predicted = torch.max(outputs.data, 1)
+            all_preds.extend(predicted.numpy())
+            all_labels.extend(labels.numpy())
         avg_loss = running_loss / len(train_loader)
-        print(f'Epoch [{epoch+1}/{epochs}], Loss: {avg_loss:.4f}')
-        mlflow.log_metric("loss", avg_loss, step=epoch)  # 에포크별 평균 손실 로그
+        epoch_accuracy = (np.array(all_preds) == np.array(all_labels)).sum() / len(all_labels)
+        epoch_precision = precision_score(all_labels, all_preds, average='weighted')
+        epoch_recall = recall_score(all_labels, all_preds, average='weighted')
+        
+        print(f'Epoch [{epoch+1}/{epochs}], Loss: {avg_loss:.4f}, Accuracy: {epoch_accuracy:.4f}, Precision: {epoch_precision:.4f}, Recall: {epoch_recall:.4f}')
+        
+        mlflow.log_metric("loss", avg_loss, step=epoch)
+        mlflow.log_metric("accuracy", epoch_accuracy, step=epoch)
+        mlflow.log_metric("precision", epoch_precision, step=epoch)
+        mlflow.log_metric("recall", epoch_recall, step=epoch)
 
     # 모델 저장
     mlflow.pytorch.log_model(model, "model")
     model_uri = f"runs:/{run.info.run_id}/model"
     mlflow.register_model(model_uri, "SimpleNN")
+
