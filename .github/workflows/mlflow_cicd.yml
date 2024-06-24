@@ -2,12 +2,12 @@ name: MLflow CI/CD
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
@@ -19,58 +19,20 @@ jobs:
 
     - name: Install dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential libssl-dev zlib1g-dev \
-                                libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
-                                libncurses5-dev libncursesw5-dev xz-utils tk-dev libffi-dev \
-                                liblzma-dev git
-        python -m pip install --upgrade pip
-        pip install -r $GITHUB_WORKSPACE/requirements.txt
-        pip install mlflow
+        python -m venv mlflow-env
+        source mlflow-env/bin/activate
+        pip install -r requirements.txt
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1
-
-    - name: Log in to Docker Hub
-      uses: docker/login-action@v1
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-
-    - name: Build and push Docker image
+    - name: Run unit tests
       run: |
-        docker build -t ${{ secrets.DOCKER_USERNAME }}/mlflow_cicd:latest $GITHUB_WORKSPACE
+        source mlflow-env/bin/activate
+        pytest tests/
+
+    - name: Build Docker image
+      run: docker build . -t mlflow_cicd
+
+    - name: Push Docker image to Docker Hub
+      run: |
+        docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+        docker tag mlflow_cicd ${{ secrets.DOCKER_USERNAME }}/mlflow_cicd:latest
         docker push ${{ secrets.DOCKER_USERNAME }}/mlflow_cicd:latest
-
-    - name: Check if container exists
-      id: check_container
-      run: |
-        if [ $(docker ps -a -f name=mlflow_cicd_container | grep -w mlflow_cicd_container | wc -l) -eq 1 ]; then
-          echo "exists=true" >> $GITHUB_ENV
-        else
-          echo "exists=false" >> $GITHUB_ENV
-        fi
-
-    - name: Run Docker container
-      if: env.exists == 'false'
-      run: |
-        docker run -d -p 5002:5002 --name mlflow_cicd_container ${{ secrets.DOCKER_USERNAME }}/mlflow_cicd:latest
-        sleep 10  # 컨테이너가 시작될 시간을 줌
-
-    - name: Start existing Docker container
-      if: env.exists == 'true'
-      run: |
-        docker start mlflow_cicd_container
-        sleep 10  # 컨테이너가 시작될 시간을 줌
-
-    - name: Check container status
-      run: |
-        until [ "`docker inspect -f {{.State.Running}} mlflow_cicd_container`" == "true" ]; do
-          echo "Waiting for container to start..."
-          sleep 5
-        done
-
-    - name: Test Docker container
-      run: |
-        docker exec mlflow_cicd_container python /app/scripts/train_model.py
-        docker exec mlflow_cicd_container python /app/scripts/evaluate_model.py --model_name SimpleNN --model_version 1
