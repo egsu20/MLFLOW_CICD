@@ -1,19 +1,3 @@
-from flask import Flask, request, render_template
-import os
-import subprocess
-import zipfile
-
-app = Flask(__name__)
-
-UPLOAD_FOLDER = os.path.abspath('uploads')
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-@app.route('/')
-def home():
-    return render_template('index.html')
-
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'model' not in request.files:
@@ -63,21 +47,13 @@ def upload_file():
         return render_template('index.html', message=f"Upload Failed: {str(e)}"), 500
 
     try:
-        if training_included == 'yes':
-            epochs = request.form.get('epochs', '5')
-            batch_size = request.form.get('batch_size', '64')
-            learning_rate = request.form.get('learning_rate', '0.01')
-            subprocess.run(['python3', 'scripts/train_model.py', '--epochs', epochs, '--batch_size', batch_size, '--learning_rate', learning_rate], check=True)
-        if evaluation_included == 'yes':
-            model_name = request.form.get('model_name', 'SimpleNN')
-            model_version = request.form.get('model_version', '1')
-            subprocess.run(['python3', 'scripts/evaluate_model.py', '--model_name', model_name, '--model_version', model_version], check=True)
+        if training_included == 'no':
+            subprocess.run(['python3', 'scripts/train_model.py'], check=True)
+        if evaluation_included == 'no':
+            subprocess.run(['python3', 'scripts/evaluate_model.py'], check=True)
     except subprocess.CalledProcessError as e:
         os.chdir(current_dir)
         return render_template('index.html', message=f"Execution Failed: {str(e)}"), 500
 
     os.chdir(current_dir)
     return render_template('index.html', message="Upload Successful"), 200
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001)
